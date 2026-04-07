@@ -370,7 +370,8 @@ fun OktoFlyWebView(
                         super.onPageFinished(view, url)
                         // Flush cookies to disk so session persists after app restart
                         CookieManager.getInstance().flush()
-                        // Inject CSS to fix contrast issues and hide nav bar
+                        // Inject CSS to fix contrast — only target white-on-white text,
+                        // leave all coloured elements (red/orange/blue time labels) untouched
                         val css = """
                             javascript:(function() {
                                 var style = document.createElement('style');
@@ -379,48 +380,50 @@ fun OktoFlyWebView(
                                     /* Hide the nav bar since we have our own */
                                     .oktofly-nav, .okf-nav-bar, nav { display: none !important; }
 
-                                    /* Fix white/light backgrounds with invisible text */
-                                    body, html {
-                                        background: #f0f4f8 !important;
+                                    /* Only fix elements that have a white/near-white background
+                                       AND white/light text — i.e. invisible text on white rows.
+                                       We do this by targeting white backgrounds specifically
+                                       and forcing dark text, but ONLY where no inline
+                                       background-color is set (those are the coloured badges). */
+                                    .okf-hour-row,
+                                    .hour-row,
+                                    .forecast-row,
+                                    .time-slot,
+                                    .slot-row {
                                         color: #111111 !important;
                                     }
 
-                                    /* Force dark text on all light background elements */
-                                    div, span, p, td, th, li, label, a {
+                                    /* Fix white background rows that have no colour class */
+                                    tr:not([class*="red"]):not([class*="orange"]):not([class*="blue"]):not([class*="green"]) td,
+                                    div:not([class*="red"]):not([class*="orange"]):not([class*="blue"]):not([class*="green"]) > span {
                                         color: #111111 !important;
                                     }
 
-                                    /* Fix the hourly row boxes */
-                                    [class*="hour"], [class*="row"], [class*="slot"],
-                                    [class*="item"], [class*="cell"], [class*="time"] {
-                                        color: #111111 !important;
-                                        background-color: #ffffff !important;
-                                    }
-
-                                    /* Keep the blue fly-status buttons readable */
-                                    [style*="background-color: rgb(33, 150, 243)"],
-                                    [style*="background:#1565"],
-                                    [class*="blue"], [class*="good"] {
-                                        color: #ffffff !important;
-                                    }
-
-                                    /* Keep orange/red warning buttons readable */
-                                    [class*="orange"], [class*="warn"],
-                                    [class*="red"], [class*="danger"] {
-                                        color: #ffffff !important;
-                                    }
-
-                                    /* Fix the detail info cards */
-                                    [class*="card"], [class*="box"], [class*="panel"],
-                                    [class*="detail"], [class*="forecast"] {
+                                    /* Specifically fix rows where background is white/light grey */
+                                    [style*="background-color: rgb(255, 255, 255)"],
+                                    [style*="background-color: white"],
+                                    [style*="background-color: #fff"],
+                                    [style*="background-color: #f"] {
                                         color: #111111 !important;
                                     }
 
-                                    /* Fix any white-on-white text */
-                                    *[style*="color: white"], *[style*="color:#fff"],
-                                    *[style*="color: #fff"], *[style*="color:white"] {
+                                    /* Fix the expanded detail cards which are light blue/white */
+                                    [style*="background-color: rgb(227"],
+                                    [style*="background-color: rgb(236"],
+                                    [style*="background-color: rgb(240"],
+                                    [style*="background-color: rgb(245"],
+                                    [style*="background-color: rgb(248"],
+                                    [style*="background-color: rgb(250"] {
                                         color: #111111 !important;
                                     }
+
+                                    /* Preserve white text on coloured (red/orange/blue) badges */
+                                    [style*="background-color: rgb(33, 150, 243)"] { color: #fff !important; }
+                                    [style*="background-color: rgb(30, 136, 229)"] { color: #fff !important; }
+                                    [style*="background-color: rgb(244, 67, 54)"]  { color: #fff !important; }
+                                    [style*="background-color: rgb(229, 57, 53)"]  { color: #fff !important; }
+                                    [style*="background-color: rgb(255, 152, 0)"]  { color: #fff !important; }
+                                    [style*="background-color: rgb(251, 140, 0)"]  { color: #fff !important; }
                                 `;
                                 document.head.appendChild(style);
                             })()
