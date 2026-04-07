@@ -370,7 +370,7 @@ fun OktoFlyWebView(
                         super.onPageFinished(view, url)
                         // Flush cookies to disk so session persists after app restart
                         CookieManager.getInstance().flush()
-                        // Inject CSS to hide oktofly header/footer for cleaner look
+                        // Inject CSS to fix contrast issues and hide nav bar
                         val css = """
                             javascript:(function() {
                                 var style = document.createElement('style');
@@ -378,7 +378,49 @@ fun OktoFlyWebView(
                                 style.innerHTML = `
                                     /* Hide the nav bar since we have our own */
                                     .oktofly-nav, .okf-nav-bar, nav { display: none !important; }
-                                    body { background: #0A1628 !important; color: #fff !important; }
+
+                                    /* Fix white/light backgrounds with invisible text */
+                                    body, html {
+                                        background: #f0f4f8 !important;
+                                        color: #111111 !important;
+                                    }
+
+                                    /* Force dark text on all light background elements */
+                                    div, span, p, td, th, li, label, a {
+                                        color: #111111 !important;
+                                    }
+
+                                    /* Fix the hourly row boxes */
+                                    [class*="hour"], [class*="row"], [class*="slot"],
+                                    [class*="item"], [class*="cell"], [class*="time"] {
+                                        color: #111111 !important;
+                                        background-color: #ffffff !important;
+                                    }
+
+                                    /* Keep the blue fly-status buttons readable */
+                                    [style*="background-color: rgb(33, 150, 243)"],
+                                    [style*="background:#1565"],
+                                    [class*="blue"], [class*="good"] {
+                                        color: #ffffff !important;
+                                    }
+
+                                    /* Keep orange/red warning buttons readable */
+                                    [class*="orange"], [class*="warn"],
+                                    [class*="red"], [class*="danger"] {
+                                        color: #ffffff !important;
+                                    }
+
+                                    /* Fix the detail info cards */
+                                    [class*="card"], [class*="box"], [class*="panel"],
+                                    [class*="detail"], [class*="forecast"] {
+                                        color: #111111 !important;
+                                    }
+
+                                    /* Fix any white-on-white text */
+                                    *[style*="color: white"], *[style*="color:#fff"],
+                                    *[style*="color: #fff"], *[style*="color:white"] {
+                                        color: #111111 !important;
+                                    }
                                 `;
                                 document.head.appendChild(style);
                             })()
