@@ -336,7 +336,12 @@ fun OktoFlyWebView(
     AndroidView(
         modifier = Modifier.fillMaxSize(),
         factory = { context ->
+            // Enable persistent cookies so login session survives app restarts
+            val cookieManager = CookieManager.getInstance()
+            cookieManager.setAcceptCookie(true)
+
             WebView(context).apply {
+                cookieManager.setAcceptThirdPartyCookies(this, true)
                 settings.apply {
                     javaScriptEnabled = true
                     domStorageEnabled = true
@@ -363,6 +368,8 @@ fun OktoFlyWebView(
 
                     override fun onPageFinished(view: WebView?, url: String?) {
                         super.onPageFinished(view, url)
+                        // Flush cookies to disk so session persists after app restart
+                        CookieManager.getInstance().flush()
                         // Inject CSS to hide oktofly header/footer for cleaner look
                         val css = """
                             javascript:(function() {
